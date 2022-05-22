@@ -81,10 +81,22 @@ public class AppUserService implements IAppUserService, UserDetailsService {
 
     @Override
     public void addRoleToUser(String username, String roleName) {
-        log.info("Adicionando novo papel {} para o usuário {}.", roleName, username);
-
         AppUser user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            log.error("Usuário {} não encontrado.", username);
+
+            throw new UsernameNotFoundException(String.format("Usuário %s não encontrado.", username));
+        }
+
         Role role = roleRepository.findByName(roleName);
+
+        if (user.getRoles().contains(role)) {
+            log.info("Usuário {} já possui o papel {}.", username, roleName);
+            return;
+        }
+
+        log.info("Adicionando novo papel {} para o usuário {}.", roleName, username);
 
         user.getRoles().add(role);
     }

@@ -1,7 +1,7 @@
 package com.conecta.conecta_api.security.filters;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
+import com.conecta.conecta_api.security.utils.TokenUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +17,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,8 +27,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private final AuthenticationManager authenticationManager;
 
-    public AuthenticationFilter(AuthenticationManager authenticationManager) {
+    private final TokenUtils jwtUtils;
+
+    public AuthenticationFilter(AuthenticationManager authenticationManager, TokenUtils jwtUtils) {
         this.authenticationManager = authenticationManager;
+        this.jwtUtils = jwtUtils;
     }
 
     @Override
@@ -49,26 +51,21 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         User user = (User) authentication.getPrincipal();
 
-        // TODO: 21/05/2022  atualizar secret jwt
-        Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
-
-        Date expiration = new Date(System.currentTimeMillis() + 10 * 60 * 1000); // 10 min
         String accessToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(expiration)
+                .withExpiresAt(jwtUtils.getTokenExpiration())
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getAuthorities()
                         .stream()
                         .map(GrantedAuthority::getAuthority)
                         .collect(Collectors.toList()))
-                .sign(algorithm);
+                .sign(jwtUtils.getAlgorithm());
 
-        Date refreshExpiration = new Date(System.currentTimeMillis() + 30 * 60 * 1000); // 30 min
         String refreshToken = JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(refreshExpiration)
+                .withExpiresAt(jwtUtils.getRefreshTokenExpiration())
                 .withIssuer(request.getRequestURL().toString())
-                .sign(algorithm);
+                .sign(jwtUtils.getAlgorithm());
 
         Map<String, String> tokens = new HashMap<>();
         tokens.put("access_token", accessToken);

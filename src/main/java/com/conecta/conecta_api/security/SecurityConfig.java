@@ -2,6 +2,7 @@ package com.conecta.conecta_api.security;
 
 import com.conecta.conecta_api.security.filters.AuthenticationFilter;
 import com.conecta.conecta_api.security.filters.AuthorizationFilter;
+import com.conecta.conecta_api.security.utils.TokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,15 +26,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+    private final TokenUtils jwtUtils;
+
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService)
-                .passwordEncoder(bCryptPasswordEncoder);
+        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder);
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        AuthenticationFilter filter = new AuthenticationFilter(authenticationManagerBean());
+        AuthenticationFilter filter = new AuthenticationFilter(authenticationManagerBean(), jwtUtils);
 
         filter.setFilterProcessesUrl("/api/v1/login");
 
@@ -46,17 +48,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests().antMatchers(GET, "/api/v1/token/refresh").permitAll();
 
-        http.authorizeRequests()
-                .antMatchers(GET, "/api/v1/users/**")
-                .hasAnyAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(GET, "/api/v1/users/**").hasAnyAuthority("ROLE_ADMIN");
 
-        http.authorizeRequests()
-                .antMatchers(GET, "/api/v1/users/me")
-                .hasAnyAuthority("ROLE_USER");
+        http.authorizeRequests().antMatchers(GET, "/api/v1/users/me").hasAnyAuthority("ROLE_USER");
 
-        http.authorizeRequests()
-                .antMatchers(POST, "/api/v1/user/save/**").
-                hasAnyAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(POST, "/api/v1/user/save/**").hasAnyAuthority("ROLE_ADMIN");
 
         http.authorizeRequests().anyRequest().authenticated();
 

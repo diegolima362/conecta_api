@@ -2,6 +2,7 @@ package com.conecta.conecta_api;
 
 import com.conecta.conecta_api.domain.AppUser;
 import com.conecta.conecta_api.domain.Role;
+import com.conecta.conecta_api.security.utils.TokenUtils;
 import com.conecta.conecta_api.services.AppUserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -39,21 +40,21 @@ public class ConectaApiApplication {
             userService.addRoleToUser("diegolima", "ROLE_SUPER_ADMIN");
             userService.addRoleToUser("diegolima", "ROLE_ADMIN");
             userService.addRoleToUser("diegolima", "ROLE_MANAGER");
-            userService.addRoleToUser("diegolima", "ROLE_USER");
 
             userService.addRoleToUser("r3n4n", "ROLE_ADMIN");
             userService.addRoleToUser("r3n4n", "ROLE_MANAGER");
-            userService.addRoleToUser("r3n4n", "ROLE_USER");
 
             userService.addRoleToUser("brdiniz", "ROLE_MANAGER");
-            userService.addRoleToUser("brdiniz", "ROLE_USER");
-
-            userService.addRoleToUser("jao", "ROLE_USER");
         };
     }
 
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    TokenUtils tokenUtils() {
+        return new TokenUtils();
     }
 }
