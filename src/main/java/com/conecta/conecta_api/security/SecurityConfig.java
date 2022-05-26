@@ -1,9 +1,13 @@
 package com.conecta.conecta_api.security;
 
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+
 import com.conecta.conecta_api.security.filters.AuthenticationFilter;
 import com.conecta.conecta_api.security.filters.AuthorizationFilter;
 import com.conecta.conecta_api.security.utils.TokenUtils;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,9 +19,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -38,8 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         AuthenticationFilter filter = new AuthenticationFilter(authenticationManagerBean(), jwtUtils);
 
         filter.setFilterProcessesUrl("/api/v1/login");
-
-        http.csrf().disable();
+        http.cors().and().csrf().disable();
+        
         http.sessionManagement().sessionCreationPolicy(STATELESS);
 
         http.authorizeRequests().antMatchers("/api/v1/login").permitAll();
@@ -59,7 +61,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.addFilter(filter);
         http.addFilterBefore(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
-
 
     @Bean
     @Override

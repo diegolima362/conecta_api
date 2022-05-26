@@ -1,11 +1,14 @@
 package com.conecta.conecta_api.services;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.conecta.conecta_api.data.AppUserRepository;
 import com.conecta.conecta_api.data.RoleRepository;
 import com.conecta.conecta_api.domain.AppUser;
 import com.conecta.conecta_api.domain.Role;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,9 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -49,17 +51,20 @@ public class AppUserService implements IAppUserService, UserDetailsService {
         return new User(
                 user.getUsername(),
                 user.getPassword(),
-                authorities
-        );
+                authorities);
     }
 
     @Override
     public AppUser saveUser(AppUser user) {
-        AppUser localUser = userRepository.findByUsername(user.getUsername());
+        AppUser userByUsername = userRepository.findByUsername(user.getUsername());
 
-        if (localUser != null) {
+        AppUser userByEmail = userRepository.findByEmail(user.getEmail());
+
+        if (userByUsername != null) {
             log.warn("Username já cadastrado!");
             throw new IllegalStateException("Username já cadastrado!");
+        } else if (userByEmail != null) {
+            throw new IllegalStateException("Email já cadastrado!");
         }
 
         log.info("Salvando novo usuário {} no banco de dados.", user.getName());
