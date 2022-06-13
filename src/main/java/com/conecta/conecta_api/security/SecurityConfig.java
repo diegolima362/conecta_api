@@ -1,13 +1,9 @@
 package com.conecta.conecta_api.security;
 
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
-
 import com.conecta.conecta_api.security.filters.AuthenticationFilter;
 import com.conecta.conecta_api.security.filters.AuthorizationFilter;
 import com.conecta.conecta_api.security.utils.TokenUtils;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,7 +15,9 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import lombok.RequiredArgsConstructor;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
 
 @Configuration
 @EnableWebSecurity
@@ -41,7 +39,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         filter.setFilterProcessesUrl("/api/v1/login");
         http.cors().and().csrf().disable();
-        
+
         http.sessionManagement().sessionCreationPolicy(STATELESS);
 
         http.authorizeRequests().antMatchers("/api/v1/login").permitAll();
@@ -52,11 +50,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.authorizeRequests().antMatchers(GET, "/api/v1/users/me").hasAnyAuthority("ROLE_USER");
 
+        http.authorizeRequests().antMatchers(GET, "/api/v1/users/me/courses").hasAnyAuthority("ROLE_USER");
+
         http.authorizeRequests().antMatchers(GET, "/api/v1/users/**").hasAnyAuthority("ROLE_ADMIN");
 
         http.authorizeRequests().antMatchers(POST, "/api/v1/user/save/**").hasAnyAuthority("ROLE_ADMIN");
 
-        http.authorizeRequests().anyRequest().authenticated();
+        http.authorizeRequests().antMatchers(POST, "/api/v1/courses/**/join").hasAnyAuthority("ROLE_USER");
+
+        http.authorizeRequests().antMatchers(GET, "/api/v1/courses/**").hasAnyAuthority("ROLE_ADMIN");
+
+        http.authorizeRequests().anyRequest().hasAnyAuthority("ROLE_SUPER_ADMIN");
 
         http.addFilter(filter);
         http.addFilterBefore(new AuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -15,7 +15,7 @@ public class TokenUtils {
     }
 
     public Date getTokenExpiration() {
-        return new Date(System.currentTimeMillis() + 10 * 60 * 1000); // 10 min
+        return new Date(System.currentTimeMillis() + 60 * 60 * 1000); // 60 min
     }
 
     public Date getRefreshTokenExpiration() {

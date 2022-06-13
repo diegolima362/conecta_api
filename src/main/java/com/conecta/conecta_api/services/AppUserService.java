@@ -1,14 +1,12 @@
 package com.conecta.conecta_api.services;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.conecta.conecta_api.data.AppUserRepository;
 import com.conecta.conecta_api.data.RoleRepository;
-import com.conecta.conecta_api.domain.AppUser;
-import com.conecta.conecta_api.domain.Role;
-
+import com.conecta.conecta_api.domain.entities.AppUser;
+import com.conecta.conecta_api.domain.entities.Role;
+import com.conecta.conecta_api.services.interfaces.IAppUserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,8 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,13 +33,15 @@ public class AppUserService implements IAppUserService, UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        AppUser user = userRepository.findByUsername(username);
+        Optional<AppUser> optionalAppUser = userRepository.findByUsername(username);
 
-        if (user == null) {
+        if (optionalAppUser.isEmpty()) {
             log.error("Usuário {} não encontrado.", username);
 
             throw new UsernameNotFoundException(String.format("Usuário %s não encontrado.", username));
         }
+
+        var user = optionalAppUser.get();
 
         log.info("Usuário {} encontrado.", username);
 
@@ -56,14 +58,14 @@ public class AppUserService implements IAppUserService, UserDetailsService {
 
     @Override
     public AppUser saveUser(AppUser user) {
-        AppUser userByUsername = userRepository.findByUsername(user.getUsername());
+        var userByUsername = userRepository.findByUsername(user.getUsername());
 
-        AppUser userByEmail = userRepository.findByEmail(user.getEmail());
+        var userByEmail = userRepository.findByEmail(user.getEmail());
 
-        if (userByUsername != null) {
+        if (userByUsername.isPresent()) {
             log.warn("Username já cadastrado!");
             throw new IllegalStateException("Username já cadastrado!");
-        } else if (userByEmail != null) {
+        } else if (userByEmail.isPresent()) {
             throw new IllegalStateException("Email já cadastrado!");
         }
 
@@ -86,15 +88,17 @@ public class AppUserService implements IAppUserService, UserDetailsService {
 
     @Override
     public void addRoleToUser(String username, String roleName) {
-        AppUser user = userRepository.findByUsername(username);
+        var optionalAppUser = userRepository.findByUsername(username);
 
-        if (user == null) {
+        if (optionalAppUser.isEmpty()) {
             log.error("Usuário {} não encontrado.", username);
 
             throw new UsernameNotFoundException(String.format("Usuário %s não encontrado.", username));
         }
 
         Role role = roleRepository.findByName(roleName);
+
+        var user = optionalAppUser.get();
 
         if (user.getRoles().contains(role)) {
             log.info("Usuário {} já possui o papel {}.", username, roleName);
@@ -107,10 +111,18 @@ public class AppUserService implements IAppUserService, UserDetailsService {
     }
 
     @Override
-    public AppUser getUser(String username) {
+    public Optional<AppUser> getUser(String username) {
         log.info("Buscando o usuário {}.", username);
 
         return userRepository.findByUsername(username);
+
+    }
+
+    @Override
+    public Optional<AppUser> getUserById(Long userId) {
+        log.info("Buscando o usuário {}.", userId);
+
+        return userRepository.findById(userId);
     }
 
     @Override

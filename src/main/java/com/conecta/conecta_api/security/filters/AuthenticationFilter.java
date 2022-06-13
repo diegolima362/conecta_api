@@ -39,8 +39,6 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        log.info("Username: {}", username);
-        log.info("Password: {}", password);
 
         final var authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
 

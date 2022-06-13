@@ -1,11 +1,12 @@
 package com.conecta.conecta_api.data;
 
-import com.conecta.conecta_api.domain.AppUser;
-
+import com.conecta.conecta_api.domain.entities.AppUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AppUserRepository extends JpaRepository<AppUser, Long> {
-    AppUser findByUsername(String username);
+import java.util.Optional;
 
-    AppUser findByEmail(String email);    
+public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+    Optional<AppUser> findByUsername(String username);
+
+    Optional<AppUser> findByEmail(String email);
 }
