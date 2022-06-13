@@ -15,6 +15,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.conecta.conecta_api.api.AppUserResource.getTokenInfo;
@@ -96,7 +97,7 @@ public class CourseResource {
     @PostMapping(path = "/courses/register")
     public ResponseEntity<CourseInfo> saveCourse(@RequestBody CourseInfo course) {
         Course toSave = new Course();
-        toSave.setCode(course.getCode());
+        toSave.setCode(generateCode());
         toSave.setName(course.getName());
 
         var professor = userService.getUserById(course.getProfessorId());
@@ -115,6 +116,19 @@ public class CourseResource {
 
     TokenInfo extractInfo(String authorizationHeader) {
         return getTokenInfo(authorizationHeader, jwtUtils);
+    }
+
+    public static String generateCode() {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 8;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString()
+                .toUpperCase();
     }
 }
 
