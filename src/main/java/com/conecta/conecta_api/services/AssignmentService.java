@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,11 @@ public class AssignmentService implements IAssignmentService {
     @Override
     public Collection<Assignment> getCourseAssignments(Long courseId) {
         return assignmentRepository.findByCourseId(courseId);
+    }
+
+    @Override
+    public Optional<Assignment> getAssignment(Long assignmentId) {
+        return assignmentRepository.findById(assignmentId);
     }
 
     @Override

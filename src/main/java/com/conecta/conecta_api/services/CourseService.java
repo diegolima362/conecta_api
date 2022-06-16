@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,10 @@ public class CourseService implements ICourseService {
         log.info("Buscando todos os Cursos do usuario {}.", user.getUsername());
 
         var courses = user.getTeachingCourses();
-        var registrations = user.getRegistrations().stream().map(CourseRegistration::getCourse).toList();
+        var registrations = user.getRegistrations()
+                .stream()
+                .map(CourseRegistration::getCourse)
+                .toList();
 
         courses.addAll(registrations);
 
@@ -86,9 +90,71 @@ public class CourseService implements ICourseService {
 
         var course = courseRepository.findById(courseId);
 
-        if (course.isEmpty())
-            return new ArrayList<>();
+        if (course.isEmpty()) return new ArrayList<>();
 
         return course.get().getRegistrations();
+    }
+
+    @Override
+    public Optional<Course> deleteCourse(Long courseId) {
+        log.info("Buscando o curso {}.", courseId);
+
+        var course = courseRepository.findById(courseId);
+
+        if (course.isEmpty()) throw new EntityNotFoundException();
+
+
+        registrationRepository.deleteAllByCourseId(courseId);
+
+        courseRepository.delete(course.get());
+        return course;
+
+    }
+
+    @Override
+    public Optional<CourseRegistration> registerStudent(Long courseId, AppUser user) {
+        var optionalCourse = courseRepository.findById(courseId);
+        if (optionalCourse.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+
+        var course = optionalCourse.get();
+
+        log.info("Adicionando user {} ao curso {}.", user.getUsername(), course.getName());
+        var registration = new CourseRegistration();
+        registration.setCourse(course);
+        registration.setStudent(user);
+        registration.setRegisteredAt(LocalDateTime.now());
+
+        registrationRepository.save(registration);
+
+        course.getRegistrations().add(registration);
+
+        return Optional.of(registration);
+    }
+
+    @Override
+    public Optional<CourseRegistration> removeStudent(Long courseId, Long registrationId) {
+        var optionalCourse = courseRepository.findById(courseId);
+        if (optionalCourse.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+
+        var course = optionalCourse.get();
+
+        var registration = registrationRepository.findById(registrationId);
+        if (registration.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+
+        course.getRegistrations().remove(registration.get());
+        registrationRepository.deleteById(registrationId);
+
+        return registration;
+    }
+
+    @Override
+    public Optional<CourseRegistration> getRegistration(Long registrationId) {
+        return registrationRepository.findById(registrationId);
     }
 }
