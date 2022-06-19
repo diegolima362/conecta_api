@@ -15,7 +15,11 @@ public interface IAppUserService {
 
     Optional<AppUser> getUser(String username);
 
+    Optional<AppUser> getUserByEmail(String email);
+
     Optional<AppUser> getUserById(Long userId);
 
     List<AppUser> getUsers();
+
+
 }

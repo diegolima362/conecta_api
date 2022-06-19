@@ -113,22 +113,24 @@ public class AppUserService implements IAppUserService, UserDetailsService {
     @Override
     public Optional<AppUser> getUser(String username) {
         log.info("Buscando o usuário {}.", username);
-
         return userRepository.findByUsername(username);
+    }
 
+    @Override
+    public Optional<AppUser> getUserByEmail(String email) {
+        log.info("Buscando o usuário {}.", email);
+        return userRepository.findByEmail(email);
     }
 
     @Override
     public Optional<AppUser> getUserById(Long userId) {
         log.info("Buscando o usuário {}.", userId);
-
         return userRepository.findById(userId);
     }
 
     @Override
     public List<AppUser> getUsers() {
         log.info("Buscando todos os usuários.");
-
         return userRepository.findAll();
     }
 }

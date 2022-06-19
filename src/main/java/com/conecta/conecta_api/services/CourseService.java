@@ -71,7 +71,20 @@ public class CourseService implements ICourseService {
         log.info("Buscando o curso {}.", code);
         Optional<Course> course = courseRepository.findByCode(code);
 
+
         if (course.isPresent()) {
+            var contains = course.get()
+                    .getRegistrations()
+                    .stream()
+                    .anyMatch(e -> e.getStudent()
+                            .getId()
+                            .equals(user.getId()));
+
+            if (contains) {
+                log.info("Aluno {} já registrado no curso {}.", user.getUsername(), code);
+                return;
+            }
+
             log.info("Adicionando user {} ao curso {}.", user.getUsername(), code);
             var registration = new CourseRegistration();
             registration.setCourse(course.get());
@@ -119,6 +132,18 @@ public class CourseService implements ICourseService {
         }
 
         var course = optionalCourse.get();
+
+        var contains = course
+                .getRegistrations()
+                .stream()
+                .anyMatch(e -> e.getStudent()
+                        .getId()
+                        .equals(user.getId()));
+
+        if (contains) {
+            log.info("Aluno {} já registrado no curso {}.", user.getUsername(), courseId);
+            return Optional.empty();
+        }
 
         log.info("Adicionando user {} ao curso {}.", user.getUsername(), course.getName());
         var registration = new CourseRegistration();

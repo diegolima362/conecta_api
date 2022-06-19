@@ -3,12 +3,14 @@ package com.conecta.conecta_api.domain.dtos;
 import com.conecta.conecta_api.domain.entities.Course;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class CourseInfo {
+public class CourseInfo implements Serializable {
     private Long id;
     private String name;
     private Long professorId;
