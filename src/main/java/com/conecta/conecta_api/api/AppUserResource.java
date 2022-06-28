@@ -63,6 +63,28 @@ public class AppUserResource {
         return ResponseEntity.ok().body(AppUserInfo.fromAppUser(user.get()));
     }
 
+    @GetMapping(path = "/users/{username}")
+    public ResponseEntity<AppUserInfo> searchUserByUsername(@PathVariable String username) {
+        var user = userService.getUser(username);
+
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok().body(AppUserInfo.fromAppUser(user.get()));
+    }
+
+    @GetMapping(path = "/users/{email}")
+    public ResponseEntity<AppUserInfo> searchUserByEmail(@PathVariable String email) {
+        var user = userService.getUserByEmail(email);
+
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok().body(AppUserInfo.fromAppUser(user.get()));
+    }
+
     @PostMapping(path = "/role/save")
     public ResponseEntity<Role> saveRole(@RequestBody Role role) {
         URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/v1/role/save").toUriString());

@@ -1,17 +1,19 @@
 package com.conecta.conecta_api.api;
 
-import com.conecta.conecta_api.domain.dtos.AppUserInfo;
 import com.conecta.conecta_api.domain.dtos.CourseInfo;
+import com.conecta.conecta_api.domain.dtos.CourseRegistrationInfo;
 import com.conecta.conecta_api.domain.entities.Course;
 import com.conecta.conecta_api.domain.entities.CourseRegistration;
 import com.conecta.conecta_api.security.utils.TokenUtils;
 import com.conecta.conecta_api.services.AppUserService;
 import com.conecta.conecta_api.services.CourseService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
@@ -23,6 +25,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @RestController
 @RequestMapping(path = "/api/v1")
+@Slf4j
 @RequiredArgsConstructor
 public class CourseResource {
     private final CourseService courseService;
@@ -84,15 +87,56 @@ public class CourseResource {
                         .build());
     }
 
-    @GetMapping(path = "/courses/{courseId}/students")
-    public ResponseEntity<List<AppUserInfo>> getCourseRegistrations(@PathVariable Long courseId) {
+    @GetMapping(path = "/courses/{courseId}/registrations")
+    public ResponseEntity<List<CourseRegistrationInfo>> getCourseRegistrations(@PathVariable Long courseId) {
         return ResponseEntity.ok().body(
                 courseService.getCourseRegistrations(courseId)
                         .stream()
-                        .map(r -> AppUserInfo.fromAppUser(r.getStudent()))
+                        .map(CourseRegistrationInfo::fromCourseRegistration)
                         .collect(Collectors.toList()));
 
     }
+
+    @PostMapping(path = "/courses/{courseId}/registrations/{studentId}")
+    public ResponseEntity<CourseRegistrationInfo> registerStudent(@PathVariable Long courseId, @PathVariable Long studentId) {
+        var student = userService.getUserById(studentId);
+        if (student.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        try {
+            var result = courseService.registerStudent(courseId, student.get());
+            if (result.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity
+                    .ok()
+                    .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
+
+        } catch (EntityNotFoundException e) {
+            log.error("Error ao registrar aluno: " + e.toString());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping(path = "/courses/{courseId}/registrations/{registrationId}")
+    public ResponseEntity<CourseRegistrationInfo> removeStudent(@PathVariable Long courseId, @PathVariable Long registrationId) {
+        try {
+            var result = courseService.removeStudent(courseId, registrationId);
+            if (result.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            return ResponseEntity
+                    .ok()
+                    .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
+
+        } catch (EntityNotFoundException e) {
+            log.error("Erro ao remover aluno: " + e.toString());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 
     @PostMapping(path = "/courses/register")
     public ResponseEntity<CourseInfo> saveCourse(@RequestBody CourseInfo course) {
@@ -112,6 +156,36 @@ public class CourseResource {
         URI uri = URI.create(ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/v1/courses/register").toUriString());
 
         return ResponseEntity.created(uri).body(courseInfo);
+    }
+
+    @PutMapping(path = "/courses/{courseId}")
+    public ResponseEntity<CourseInfo> editCourse(@RequestBody CourseInfo courseInfo, @PathVariable Long courseId) {
+        var optionalCourse = courseService.getCourse(courseId);
+        if (optionalCourse.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var course = optionalCourse.get();
+
+        course.setName(courseInfo.getName());
+
+        var saved = courseService.saveCourse(course);
+
+        return ResponseEntity.ok().body(CourseInfo.fromCourse(saved));
+    }
+
+    @DeleteMapping(path = "/courses/{courseId}")
+    public ResponseEntity<CourseInfo> deleteCourse(@PathVariable Long courseId) {
+        try {
+            var result = courseService.deleteCourse(courseId);
+
+            return result
+                    .map(course -> ResponseEntity.ok().body(CourseInfo.fromCourse(course)))
+                    .orElseGet(() -> ResponseEntity.unprocessableEntity().build());
+        } catch (Exception e) {
+            log.error("Error ao deletar curso: %s".formatted(e.toString()));
+            return ResponseEntity.unprocessableEntity().build();
+        }
     }
 
     TokenInfo extractInfo(String authorizationHeader) {

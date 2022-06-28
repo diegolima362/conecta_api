@@ -1,18 +1,16 @@
 package com.conecta.conecta_api.domain.dtos;
 
 import com.conecta.conecta_api.domain.entities.AppUser;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+
+import java.io.Serializable;
 
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class AppUserInfo {
+public class AppUserInfo implements Serializable {
     private Long id;
     private String name;
     private String username;
