@@ -1,7 +1,6 @@
 package com.conecta.conecta_api;
 
 import com.conecta.conecta_api.security.utils.TokenUtils;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;

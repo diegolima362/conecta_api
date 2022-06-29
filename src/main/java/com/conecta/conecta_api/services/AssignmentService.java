@@ -20,7 +20,7 @@ public class AssignmentService implements IAssignmentService {
 
     @Override
     public Collection<Assignment> getCourseAssignments(Long courseId) {
-        return assignmentRepository.findByCourseId(courseId);
+        return assignmentRepository.findAllByCourseId(courseId);
     }
 
     @Override

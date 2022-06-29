@@ -14,7 +14,7 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class FeedPost {
+public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -25,15 +25,17 @@ public class FeedPost {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
-    private Course course;
+    private FeedPost post;
 
-    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
-    private List<Comment> comments;
+    private Comment replyTo;
 
-    private String title;
+    @OneToMany(mappedBy = "replyTo", fetch = FetchType.LAZY)
+    @ToString.Exclude
+    private List<Comment> replies;
+
     private String content;
-    private boolean isAssignment = false;
     private LocalDateTime creationDate;
     private LocalDateTime editDate;
 
@@ -41,8 +43,8 @@ public class FeedPost {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        FeedPost feedPost = (FeedPost) o;
-        return id != null && Objects.equals(id, feedPost.id);
+        Comment comment = (Comment) o;
+        return id != null && Objects.equals(id, comment.id);
     }
 
     @Override

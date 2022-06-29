@@ -5,8 +5,8 @@ import com.conecta.conecta_api.domain.dtos.CourseRegistrationInfo;
 import com.conecta.conecta_api.domain.entities.Course;
 import com.conecta.conecta_api.domain.entities.CourseRegistration;
 import com.conecta.conecta_api.security.utils.TokenUtils;
-import com.conecta.conecta_api.services.AppUserService;
-import com.conecta.conecta_api.services.CourseService;
+import com.conecta.conecta_api.services.interfaces.IAppUserService;
+import com.conecta.conecta_api.services.interfaces.ICourseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,9 +28,22 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Slf4j
 @RequiredArgsConstructor
 public class CourseResource {
-    private final CourseService courseService;
-    private final AppUserService userService;
+    private final ICourseService courseService;
+    private final IAppUserService userService;
     private final TokenUtils jwtUtils;
+
+    public static String generateCode() {
+        int leftLimit = 97; // letter 'a'
+        int rightLimit = 122; // letter 'z'
+        int targetStringLength = 8;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .limit(targetStringLength)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString()
+                .toUpperCase();
+    }
 
     @GetMapping(path = "/courses")
     public ResponseEntity<List<CourseInfo>> getCourses() {
@@ -42,7 +55,6 @@ public class CourseResource {
                         .map(CourseInfo::fromCourse)
                         .collect(Collectors.toList()));
     }
-
 
     @GetMapping(path = "/users/me/courses")
     public ResponseEntity<List<CourseInfo>> getMyCourses(HttpServletRequest request) {
@@ -114,7 +126,7 @@ public class CourseResource {
                     .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
 
         } catch (EntityNotFoundException e) {
-            log.error("Error ao registrar aluno: " + e.toString());
+            log.error("Error ao registrar aluno: " + e);
             return ResponseEntity.notFound().build();
         }
     }
@@ -132,11 +144,10 @@ public class CourseResource {
                     .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
 
         } catch (EntityNotFoundException e) {
-            log.error("Erro ao remover aluno: " + e.toString());
+            log.error("Erro ao remover aluno: " + e);
             return ResponseEntity.notFound().build();
         }
     }
-
 
     @PostMapping(path = "/courses/register")
     public ResponseEntity<CourseInfo> saveCourse(@RequestBody CourseInfo course) {
@@ -190,19 +201,6 @@ public class CourseResource {
 
     TokenInfo extractInfo(String authorizationHeader) {
         return getTokenInfo(authorizationHeader, jwtUtils);
-    }
-
-    public static String generateCode() {
-        int leftLimit = 97; // letter 'a'
-        int rightLimit = 122; // letter 'z'
-        int targetStringLength = 8;
-        Random random = new Random();
-
-        return random.ints(leftLimit, rightLimit + 1)
-                .limit(targetStringLength)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString()
-                .toUpperCase();
     }
 }
 

@@ -2,9 +2,11 @@ package com.conecta.conecta_api.api;
 
 import com.conecta.conecta_api.domain.dtos.AssignmentInfo;
 import com.conecta.conecta_api.domain.entities.Assignment;
-import com.conecta.conecta_api.services.AppUserService;
-import com.conecta.conecta_api.services.AssignmentService;
-import com.conecta.conecta_api.services.CourseService;
+import com.conecta.conecta_api.domain.entities.FeedPost;
+import com.conecta.conecta_api.services.interfaces.IAppUserService;
+import com.conecta.conecta_api.services.interfaces.IAssignmentService;
+import com.conecta.conecta_api.services.interfaces.ICourseService;
+import com.conecta.conecta_api.services.interfaces.IFeedService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,9 +22,10 @@ import java.util.stream.Collectors;
 @RequestMapping(path = "/api/v1")
 @RequiredArgsConstructor
 public class AssignmentResource {
-    private final AssignmentService assignmentService;
-    private final CourseService courseService;
-    private final AppUserService appUserService;
+    private final IAssignmentService assignmentService;
+    private final ICourseService courseService;
+    private final IAppUserService appUserService;
+    private final IFeedService feedService;
 
     @GetMapping(path = "/courses/{courseId}/assignments")
     public ResponseEntity<List<AssignmentInfo>> getCoursesAssignments(@PathVariable Long courseId) {
@@ -61,7 +65,8 @@ public class AssignmentResource {
     }
 
     @PostMapping(path = "/assignments/create")
-    public ResponseEntity<AssignmentInfo> createAssignment(@RequestBody AssignmentInfo assignmentInfo) {
+    public ResponseEntity<AssignmentInfo> createAssignment(@RequestParam(name = "createPost", defaultValue = "true") boolean createPost,
+                                                           @RequestBody AssignmentInfo assignmentInfo) {
         Assignment toSave = new Assignment();
 
         toSave.setTitle(assignmentInfo.getTitle());
@@ -86,8 +91,23 @@ public class AssignmentResource {
 
         var assignment = assignmentService.saveAssignment(toSave);
 
+        if (createPost)
+            createPostFromAssignment(assignment);
+
         return ResponseEntity.created(uri).body(AssignmentInfo.fromAssignment(assignment));
     }
 
+    private void createPostFromAssignment(Assignment assignment) {
+        var toSave = new FeedPost();
+        toSave.setTitle("Atividade");
+        toSave.setContent(assignment.getTitle());
+        toSave.setCreationDate(LocalDateTime.now());
+        toSave.setComments(new ArrayList<>());
+        toSave.setCourse(assignment.getCourse());
+        toSave.setAuthor(assignment.getProfessor());
 
+        toSave.setAssignment(true);
+
+        feedService.saveFeedPost(toSave);
+    }
 }

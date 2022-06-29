@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Collection;
 
 public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
-    Collection<Assignment> findByCourseId(Long courseId);
+    Collection<Assignment> findAllByCourseId(Long courseId);
 }

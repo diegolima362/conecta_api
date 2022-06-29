@@ -8,7 +8,7 @@ import com.conecta.conecta_api.domain.dtos.AppUserInfo;
 import com.conecta.conecta_api.domain.entities.AppUser;
 import com.conecta.conecta_api.domain.entities.Role;
 import com.conecta.conecta_api.security.utils.TokenUtils;
-import com.conecta.conecta_api.services.AppUserService;
+import com.conecta.conecta_api.services.interfaces.IAppUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +33,22 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping(path = "/api/v1")
 @RequiredArgsConstructor
 public class AppUserResource {
-    private final AppUserService userService;
+    private final IAppUserService userService;
     private final TokenUtils jwtUtils;
+
+    static TokenInfo getTokenInfo(String authorizationHeader, TokenUtils jwtUtils) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            String refreshToken = authorizationHeader.substring("Bearer ".length());
+            Algorithm algorithm = jwtUtils.getAlgorithm();
+
+            JWTVerifier verifier = JWT.require(algorithm).build();
+            DecodedJWT decodedJWT = verifier.verify(refreshToken);
+
+            return new TokenInfo("", refreshToken, decodedJWT.getSubject());
+        } else {
+            throw new RuntimeException("Refresh token is missing");
+        }
+    }
 
     @PostMapping(path = "/register")
     public ResponseEntity<AppUserInfo> saveUser(@RequestBody AppUser user) {
@@ -99,7 +113,6 @@ public class AppUserResource {
         return ResponseEntity.ok().build();
     }
 
-
     @GetMapping(path = "/token/refresh")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
@@ -137,20 +150,6 @@ public class AppUserResource {
             error.put("error_message", exception.getMessage());
             response.setContentType(APPLICATION_JSON_VALUE);
             new ObjectMapper().writeValue(response.getOutputStream(), error);
-        }
-    }
-
-    static TokenInfo getTokenInfo(String authorizationHeader, TokenUtils jwtUtils) {
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String refreshToken = authorizationHeader.substring("Bearer ".length());
-            Algorithm algorithm = jwtUtils.getAlgorithm();
-
-            JWTVerifier verifier = JWT.require(algorithm).build();
-            DecodedJWT decodedJWT = verifier.verify(refreshToken);
-
-            return new TokenInfo("", refreshToken, decodedJWT.getSubject());
-        } else {
-            throw new RuntimeException("Refresh token is missing");
         }
     }
 

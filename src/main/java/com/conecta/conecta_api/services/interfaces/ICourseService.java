@@ -4,7 +4,6 @@ import com.conecta.conecta_api.domain.entities.AppUser;
 import com.conecta.conecta_api.domain.entities.Course;
 import com.conecta.conecta_api.domain.entities.CourseRegistration;
 
-import javax.servlet.Registration;
 import java.util.List;
 import java.util.Optional;
 
