@@ -4,7 +4,6 @@ import com.conecta.conecta_api.data.CommentRepository;
 import com.conecta.conecta_api.domain.entities.Comment;
 import com.conecta.conecta_api.services.interfaces.ICommentService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,7 +13,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class CommentService implements ICommentService {
     private final CommentRepository commentRepository;
 
@@ -36,5 +34,15 @@ public class CommentService implements ICommentService {
     @Override
     public void deleteComment(Long commentId) {
         commentRepository.deleteById(commentId);
+    }
+
+    @Override
+    public void deleteAllByCourseId(Long courseId) {
+        commentRepository.deleteAllByPostCourseId(courseId);
+    }
+
+    @Override
+    public void deleteAllByUserIdAtCourse(Long userId, Long courseId) {
+        commentRepository.deleteAllByAuthorIdAndPostCourseId(userId, courseId);
     }
 }

@@ -5,8 +5,7 @@ import com.conecta.conecta_api.domain.dtos.CourseRegistrationInfo;
 import com.conecta.conecta_api.domain.entities.Course;
 import com.conecta.conecta_api.domain.entities.CourseRegistration;
 import com.conecta.conecta_api.security.utils.TokenUtils;
-import com.conecta.conecta_api.services.interfaces.IAppUserService;
-import com.conecta.conecta_api.services.interfaces.ICourseService;
+import com.conecta.conecta_api.services.interfaces.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +28,13 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @RequiredArgsConstructor
 public class CourseResource {
     private final ICourseService courseService;
+    private final IAssignmentService assignmentService;
+    private final ISubmissionService submissionService;
+    private final ICommentService commentService;
+
     private final IAppUserService userService;
+    private final IFeedService feedService;
+
     private final TokenUtils jwtUtils;
 
     public static String generateCode() {
@@ -38,22 +43,12 @@ public class CourseResource {
         int targetStringLength = 8;
         Random random = new Random();
 
-        return random.ints(leftLimit, rightLimit + 1)
-                .limit(targetStringLength)
-                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
-                .toString()
-                .toUpperCase();
+        return random.ints(leftLimit, rightLimit + 1).limit(targetStringLength).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString().toUpperCase();
     }
 
     @GetMapping(path = "/courses")
     public ResponseEntity<List<CourseInfo>> getCourses() {
-        return ResponseEntity
-                .ok()
-                .body(courseService
-                        .getCourses()
-                        .stream()
-                        .map(CourseInfo::fromCourse)
-                        .collect(Collectors.toList()));
+        return ResponseEntity.ok().body(courseService.getCourses().stream().map(CourseInfo::fromCourse).collect(Collectors.toList()));
     }
 
     @GetMapping(path = "/users/me/courses")
@@ -65,13 +60,7 @@ public class CourseResource {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity
-                .ok()
-                .body(courseService
-                        .getCourses(user.get())
-                        .stream()
-                        .map(CourseInfo::fromCourse)
-                        .collect(Collectors.toList()));
+        return ResponseEntity.ok().body(courseService.getCourses(user.get()).stream().map(CourseInfo::fromCourse).collect(Collectors.toList()));
     }
 
     @PostMapping(path = "/courses/{code}/join")
@@ -88,32 +77,40 @@ public class CourseResource {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping(path = "/courses/{courseId}/leave")
+    public ResponseEntity<?> leaveCourse(HttpServletRequest request, @PathVariable Long courseId) {
+        TokenInfo info = extractInfo(request.getHeader(AUTHORIZATION));
+        var user = userService.getUser(info.username());
+
+        if (user.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        var userId = user.get().getId();
+        commentService.deleteAllByUserIdAtCourse(userId, courseId);
+        submissionService.deleteAllByUserIdAtCourse(userId, courseId);
+
+        courseService.leaveCourse(courseId, user.get().getId());
+
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping(path = "/courses/{courseId}")
     public ResponseEntity<CourseInfo> getCourse(@PathVariable Long courseId) {
         return courseService.getCourse(courseId)
-                .map(course -> ResponseEntity
-                        .ok()
-                        .body(CourseInfo.fromCourse(course)))
-                .orElseGet(() -> ResponseEntity
-                        .notFound()
-                        .build());
+                .map(course -> ResponseEntity.ok().body(CourseInfo.fromCourse(course)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping(path = "/courses/{courseId}/registrations")
     public ResponseEntity<List<CourseRegistrationInfo>> getCourseRegistrations(@PathVariable Long courseId) {
-        return ResponseEntity.ok().body(
-                courseService.getCourseRegistrations(courseId)
-                        .stream()
-                        .map(CourseRegistrationInfo::fromCourseRegistration)
-                        .collect(Collectors.toList()));
-
+        return ResponseEntity.ok().body(courseService.getCourseRegistrations(courseId).stream().map(CourseRegistrationInfo::fromCourseRegistration).collect(Collectors.toList()));
     }
 
     @PostMapping(path = "/courses/{courseId}/registrations/{studentId}")
     public ResponseEntity<CourseRegistrationInfo> registerStudent(@PathVariable Long courseId, @PathVariable Long studentId) {
         var student = userService.getUserById(studentId);
-        if (student.isEmpty())
-            return ResponseEntity.notFound().build();
+        if (student.isEmpty()) return ResponseEntity.notFound().build();
 
         try {
             var result = courseService.registerStudent(courseId, student.get());
@@ -121,9 +118,7 @@ public class CourseResource {
                 return ResponseEntity.notFound().build();
             }
 
-            return ResponseEntity
-                    .ok()
-                    .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
+            return ResponseEntity.ok().body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
 
         } catch (EntityNotFoundException e) {
             log.error("Error ao registrar aluno: " + e);
@@ -134,14 +129,22 @@ public class CourseResource {
     @DeleteMapping(path = "/courses/{courseId}/registrations/{registrationId}")
     public ResponseEntity<CourseRegistrationInfo> removeStudent(@PathVariable Long courseId, @PathVariable Long registrationId) {
         try {
+
+            var registration = courseService.getRegistration(registrationId);
+            if (registration.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            var userId = registration.get().getStudent().getId();
+
+            commentService.deleteAllByUserIdAtCourse(userId, courseId);
+            submissionService.deleteAllByUserIdAtCourse(userId, courseId);
+
             var result = courseService.removeStudent(courseId, registrationId);
             if (result.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
-            return ResponseEntity
-                    .ok()
-                    .body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
+            return ResponseEntity.ok().body(CourseRegistrationInfo.fromCourseRegistration(result.get()));
 
         } catch (EntityNotFoundException e) {
             log.error("Erro ao remover aluno: " + e);
@@ -188,16 +191,20 @@ public class CourseResource {
     @DeleteMapping(path = "/courses/{courseId}")
     public ResponseEntity<CourseInfo> deleteCourse(@PathVariable Long courseId) {
         try {
+            commentService.deleteAllByCourseId(courseId);
+            feedService.deleteAllByCourseId(courseId);
+            submissionService.deleteAllByCourseId(courseId);
+            assignmentService.deleteAllByCourseId(courseId);
+
             var result = courseService.deleteCourse(courseId);
 
-            return result
-                    .map(course -> ResponseEntity.ok().body(CourseInfo.fromCourse(course)))
-                    .orElseGet(() -> ResponseEntity.unprocessableEntity().build());
+            return result.map(course -> ResponseEntity.ok().body(CourseInfo.fromCourse(course))).orElseGet(() -> ResponseEntity.unprocessableEntity().build());
         } catch (Exception e) {
             log.error("Error ao deletar curso: %s".formatted(e.toString()));
             return ResponseEntity.unprocessableEntity().build();
         }
     }
+
 
     TokenInfo extractInfo(String authorizationHeader) {
         return getTokenInfo(authorizationHeader, jwtUtils);

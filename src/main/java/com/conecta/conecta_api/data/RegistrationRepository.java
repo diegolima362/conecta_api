@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RegistrationRepository extends JpaRepository<CourseRegistration, Long> {
     void deleteAllByCourseId(Long courseId);
+
+    void deleteByCourseIdAndStudentId(Long courseId, Long studentId);
 }

@@ -27,8 +27,6 @@ public class Assignment {
 
     private String title;
 
-    private String subtitle;
-
     private String content;
 
     private Integer grade;
@@ -43,11 +41,11 @@ public class Assignment {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Assignment that)) return false;
-        return Objects.equals(id, that.id) && Objects.equals(professor, that.professor) && Objects.equals(course, that.course) && Objects.equals(title, that.title) && Objects.equals(subtitle, that.subtitle) && Objects.equals(content, that.content) && Objects.equals(grade, that.grade) && Objects.equals(creationDate, that.creationDate) && Objects.equals(editDate, that.editDate) && Objects.equals(dueDate, that.dueDate);
+        return Objects.equals(id, that.id) && Objects.equals(professor, that.professor) && Objects.equals(course, that.course) && Objects.equals(title, that.title) && Objects.equals(content, that.content) && Objects.equals(grade, that.grade) && Objects.equals(creationDate, that.creationDate) && Objects.equals(editDate, that.editDate) && Objects.equals(dueDate, that.dueDate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, professor, course, title, subtitle, content, grade, creationDate, editDate, dueDate);
+        return Objects.hash(id, professor, course, title, content, grade, creationDate, editDate, dueDate);
     }
 }

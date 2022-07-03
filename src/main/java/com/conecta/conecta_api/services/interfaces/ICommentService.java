@@ -13,4 +13,8 @@ public interface ICommentService {
     Optional<Comment> getComment(Long commentId);
 
     void deleteComment(Long commentId);
+
+    void deleteAllByCourseId(Long courseId);
+
+    void deleteAllByUserIdAtCourse(Long userId, Long courseId);
 }

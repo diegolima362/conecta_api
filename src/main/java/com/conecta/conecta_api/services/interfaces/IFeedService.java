@@ -13,4 +13,6 @@ public interface IFeedService {
     FeedPost saveFeedPost(FeedPost feedPost);
 
     void deletePost(Long postId);
+
+    void deleteAllByCourseId(Long courseId);
 }

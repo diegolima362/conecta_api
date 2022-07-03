@@ -12,7 +12,7 @@ import java.util.Objects;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserAssignment {
+public class AssignmentSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -27,23 +27,23 @@ public class UserAssignment {
 
     private LocalDateTime finishDate;
 
-    private LocalDateTime editaDate;
+    private LocalDateTime editDate;
 
     private Integer grade;
 
-    private String status;
+    private AssignmentSubmissionStatus status;
     private String content;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof UserAssignment)) return false;
-        UserAssignment that = (UserAssignment) o;
-        return Objects.equals(id, that.id) && Objects.equals(student, that.student) && Objects.equals(assignment, that.assignment) && Objects.equals(finishDate, that.finishDate) && Objects.equals(editaDate, that.editaDate) && Objects.equals(grade, that.grade) && Objects.equals(status, that.status) && Objects.equals(content, that.content);
+        if (!(o instanceof AssignmentSubmission that)) return false;
+        return Objects.equals(id, that.id) && Objects.equals(student, that.student) && Objects.equals(assignment, that.assignment) && Objects.equals(finishDate, that.finishDate) && Objects.equals(editDate, that.editDate) && Objects.equals(grade, that.grade) && Objects.equals(status, that.status) && Objects.equals(content, that.content);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, student, assignment, finishDate, editaDate, grade, status, content);
+        return Objects.hash(id, student, assignment, finishDate, editDate, grade, status, content);
     }
 }
+

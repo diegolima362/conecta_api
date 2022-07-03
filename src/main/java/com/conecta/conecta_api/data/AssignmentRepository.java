@@ -7,4 +7,5 @@ import java.util.Collection;
 
 public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
     Collection<Assignment> findAllByCourseId(Long courseId);
+    void deleteAllByCourseId(Long courseId);
 }

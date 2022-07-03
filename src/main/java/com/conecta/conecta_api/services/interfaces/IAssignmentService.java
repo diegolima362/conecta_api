@@ -13,4 +13,6 @@ public interface IAssignmentService {
     Assignment saveAssignment(Assignment assignment);
 
     void deleteAssignment(Long assignmentId);
+
+    void deleteAllByCourseId(Long courseId);
 }

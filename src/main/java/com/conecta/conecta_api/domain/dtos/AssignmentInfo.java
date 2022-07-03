@@ -18,7 +18,6 @@ public class AssignmentInfo implements Serializable {
     private Long courseId;
     private String courseName;
     private String title;
-    private String subtitle;
     private String content;
     private Integer grade;
     private LocalDateTime creationDate;
@@ -34,7 +33,6 @@ public class AssignmentInfo implements Serializable {
                 assignment.getCourse().getId(),
                 assignment.getCourse().getName(),
                 assignment.getTitle(),
-                assignment.getSubtitle(),
                 assignment.getContent(),
                 assignment.getGrade(),
                 assignment.getCreationDate(),

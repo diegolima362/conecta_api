@@ -20,6 +20,8 @@ public interface ICourseService {
 
     void joinCourse(String code, AppUser user);
 
+    void leaveCourse(Long courseId, Long studentId);
+
     List<CourseRegistration> getCourseRegistrations(Long courseId);
 
     Optional<Course> deleteCourse(Long courseId);

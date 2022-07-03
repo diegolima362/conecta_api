@@ -1,10 +1,13 @@
 package com.conecta.conecta_api.data;
 
-import com.conecta.conecta_api.domain.entities.FeedPost;
+import java.util.Collection;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Collection;
+import com.conecta.conecta_api.domain.entities.FeedPost;
 
 public interface FeedRepository extends JpaRepository<FeedPost, Long> {
     Collection<FeedPost> findAllByCourseId(Long courseId);
+
+    void deleteAllByCourseId(Long courseId);
 }

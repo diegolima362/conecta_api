@@ -1,6 +1,7 @@
 package com.conecta.conecta_api.services;
 
 import com.conecta.conecta_api.data.CourseRepository;
+import com.conecta.conecta_api.data.FeedRepository;
 import com.conecta.conecta_api.data.RegistrationRepository;
 import com.conecta.conecta_api.domain.entities.AppUser;
 import com.conecta.conecta_api.domain.entities.Course;
@@ -24,6 +25,7 @@ import java.util.Optional;
 public class CourseService implements ICourseService {
     private final CourseRepository courseRepository;
     private final RegistrationRepository registrationRepository;
+    private final FeedRepository feedRepository;
 
     @Override
     public List<Course> getCourses() {
@@ -98,6 +100,13 @@ public class CourseService implements ICourseService {
     }
 
     @Override
+    public void leaveCourse(Long courseId, Long studentId) {
+        log.info("Buscando o curso {}.", courseId);
+
+        registrationRepository.deleteByCourseIdAndStudentId(courseId, studentId);
+    }
+
+    @Override
     public List<CourseRegistration> getCourseRegistrations(Long courseId) {
         log.info("Buscando o curso {}.", courseId);
 
@@ -116,9 +125,7 @@ public class CourseService implements ICourseService {
 
         if (course.isEmpty()) throw new EntityNotFoundException();
 
-
         registrationRepository.deleteAllByCourseId(courseId);
-
         courseRepository.delete(course.get());
         return course;
 

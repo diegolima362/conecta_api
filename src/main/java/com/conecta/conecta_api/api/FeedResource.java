@@ -68,6 +68,31 @@ public class FeedResource {
         return ResponseEntity.created(uri).body(FeedPostInfo.fromPost(post));
     }
 
+
+    @PutMapping(path = "/courses/feed/{postId}")
+    public ResponseEntity<FeedPostInfo> editPost(@PathVariable Long postId, @RequestBody FeedPostInfo postInfo) {
+        var optionalPost = feedService.getPost(postId);
+        if (optionalPost.isEmpty()) {
+            return ResponseEntity.unprocessableEntity().build();
+        }
+
+        var post = optionalPost.get();
+
+        post.setTitle(postInfo.getTitle());
+        post.setContent(postInfo.getContent());
+        post.setEditDate(LocalDateTime.now());
+
+        var saved = feedService.saveFeedPost(post);
+
+        return ResponseEntity.ok().body(FeedPostInfo.fromPost(saved));
+    }
+
+    @DeleteMapping(path = "/courses/feed/{postId}")
+    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
+        feedService.deletePost(postId);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping(path = "/courses/feed/comments")
     public ResponseEntity<CommentInfo> addComment(@RequestBody CommentInfo commentInfo) {
         Comment toSave = new Comment();

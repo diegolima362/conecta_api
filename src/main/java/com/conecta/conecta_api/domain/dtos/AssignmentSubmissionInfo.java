@@ -1,37 +1,41 @@
 package com.conecta.conecta_api.domain.dtos;
 
-import com.conecta.conecta_api.domain.entities.UserAssignment;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import com.conecta.conecta_api.domain.entities.AssignmentSubmission;
+import com.conecta.conecta_api.domain.entities.AssignmentSubmissionStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserAssignmentInfo implements Serializable {
+public class AssignmentSubmissionInfo implements Serializable {
     private Long id;
     private Long studentId;
+    private String studentName;
     private Long assignmentId;
-    private Long assignmentCourseId;
+    private Long courseId;
     private LocalDateTime finishDate;
-    private LocalDateTime editaDate;
+    private LocalDateTime editDate;
     private Integer grade;
     private String content;
-    private String status;
+    private AssignmentSubmissionStatus status;
 
-    public static UserAssignmentInfo fromUserAssignment(UserAssignment userAssignment) {
-        return new UserAssignmentInfo(
+    public static AssignmentSubmissionInfo fromSubmission(AssignmentSubmission userAssignment) {
+        return new AssignmentSubmissionInfo(
                 userAssignment.getId(),
                 userAssignment.getStudent().getId(),
+                userAssignment.getStudent().getName(),
                 userAssignment.getAssignment().getId(),
                 userAssignment.getAssignment().getCourse().getId(),
                 userAssignment.getFinishDate(),
-                userAssignment.getEditaDate(),
+                userAssignment.getEditDate(),
                 userAssignment.getGrade(),
                 userAssignment.getContent(),
                 userAssignment.getStatus()

@@ -1,11 +1,10 @@
 package com.conecta.conecta_api.services;
 
-import com.conecta.conecta_api.data.AssignmentRepository;
+import com.conecta.conecta_api.data.CommentRepository;
 import com.conecta.conecta_api.data.FeedRepository;
 import com.conecta.conecta_api.domain.entities.FeedPost;
 import com.conecta.conecta_api.services.interfaces.IFeedService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,10 +14,9 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-@Slf4j
 public class FeedService implements IFeedService {
     private final FeedRepository feedRepository;
-    private final AssignmentRepository assignmentRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public Optional<FeedPost> getPost(Long postId) {
@@ -37,6 +35,12 @@ public class FeedService implements IFeedService {
 
     @Override
     public void deletePost(Long postId) {
+        commentRepository.findAllByPostId(postId);
         feedRepository.deleteById(postId);
+    }
+
+    @Override
+    public void deleteAllByCourseId(Long courseId) {
+        feedRepository.deleteAllByCourseId(courseId);
     }
 }
